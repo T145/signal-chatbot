@@ -1,23 +1,22 @@
-version: "3.4"
 services:
-  signal-cli-rest-api:
+  app:
     image: bbernhard/signal-cli-rest-api:latest
     container_name: signal-api
     restart: always
     environment:
-      - MODE=native
+      MODE: native
     ports:
       - "8080:8080"
     volumes:
-      - "$HOME/.local/share/signal-api:/home/.local/share/signal-cli"
-  mongo-api:
+      - "./data/signal-api:/home/.local/share/signal-cli"
+  db:
     image: mongo:latest
-    container_name: mongo-api
+    container_name: mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
-      - "./data:/data/db"
+      - "./data/mongodb:/data/db"
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh --quiet
       interval: 10s

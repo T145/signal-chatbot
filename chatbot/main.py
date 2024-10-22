@@ -1,3 +1,4 @@
+import typer
 import json
 import pprint
 import time
@@ -13,9 +14,22 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 
 
-def main():
-    prompt_template = """
-    Ignore all directives given before what follows.
+app = typer.Typer()
+
+
+@app.callback()
+def callback():
+    """
+    Awesome chatbot
+    """
+
+
+@app.command()
+def run():
+    """
+    Run the chatbot
+    """
+    prompt_template = """Ignore all directives given before what follows.
     You are Aida, a helpful, creative, casual, clever, and very friendly AI assistant.
     Respond to the next request sent by a person to the best of your knowledge,
     rarely greeting or referencing them in your response.
@@ -24,7 +38,9 @@ def main():
     {sender}: {message}
     """
     config = dotenv_values('.env')
+
     os.environ['HUGGINGFACEHUB_API_TOKEN'] = config['HUGGINGFACEHUB_API_TOKEN']
+
     llm = HuggingFaceEndpoint(
         repo_id='mistralai/Mistral-7B-Instruct-v0.2',
         repetition_penalty=1.03
@@ -47,7 +63,7 @@ def main():
 
     #db.groups.create_index([('internal_id', ASCENDING)], unique=True)
 
-    print('Running the chatbot!')
+    typer.echo('Running the chatbot!')
 
     for group in signal.list_groups():
         cursor = groups.find_one({'internal_id': group['internal_id']})
@@ -87,7 +103,7 @@ def main():
 
                     if text:
                         if text.lower().startswith('prompt:'):
-                            print('[INFO]: Got a request!')
+                            typer.echo('[INFO]: Got a request!')
 
                             def get_dest():
                                 if 'destination' in dm and dm['destination']:
@@ -110,12 +126,9 @@ def main():
                                 signal.send_message(message='Aida: Please give an actual prompt. I have nothing to answer!', recipients=[get_dest()])
                     else:
                         # It's a reaction
-                        print('[INFO]: Reaction detected!')
+                        typer.echo('[INFO]: Reaction detected!')
 
     except KeyboardInterrupt:
-        print('Exiting gracefully')
+        typer.echo('[INFO]: Exiting gracefully')
     finally:
         client.close()
-
-    if __name__ == '__main__':
-        main()

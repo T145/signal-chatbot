@@ -1,3 +1,8 @@
+## Tech Stack
+
+- Locally hosted Mistral model, managed by HuggingFace
+- Prompt control by LangChain & LangGraph
+- Storage handled by MongoDB
 
 ## Setup
 
