@@ -1,8 +1,9 @@
 ## Tech Stack
 
-- Locally hosted Mistral model, managed by HuggingFace
-- Prompt control by LangChain & LangGraph
-- Storage handled by MongoDB
+- Ollama to host and manage the AIs
+- Prompt control defined by LangChain & LangGraph
+- Weviate as the dataset vectorstore between Ollama and LangGraph
+- Chat storage handled by MongoDB
 
 ## Setup
 
@@ -18,4 +19,13 @@ scoop bucket add extras
 scoop install mambaforge rust
 mamba update mamba --all
 mamba create -n signalbot python=3.12 poetry
+```
+
+## Runtime
+
+```
+poetry install
+docker compose up -d
+docker exec -it ollama ollama pull llama3.1:8b
+chatbot run
 ```

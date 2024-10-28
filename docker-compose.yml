@@ -1,12 +1,13 @@
+---
 services:
   app:
     image: bbernhard/signal-cli-rest-api:latest
     container_name: signal-api
-    restart: always
+    restart: unless-stopped
     environment:
       MODE: native
     ports:
-      - "8080:8080"
+      - "1337:1337"
     volumes:
       - "./data/signal-api:/home/.local/share/signal-cli"
   db:
@@ -22,3 +23,44 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_NOHISTORY: 1 # mongo and langgraph handle this
+    ports:
+      - "11434:11434"
+    volumes:
+      - "./data/ollama:/root/.ollama"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  # weaviate:
+  #   command:
+  #   - --host
+  #   - 0.0.0.0
+  #   - --port
+  #   - '8080'
+  #   - --scheme
+  #   - http
+  #   image: cr.weaviate.io/semitechnologies/weaviate:1.27.0
+  #   container_name: weaviate
+  #   ports:
+  #   - 8080:8080
+  #   - 50051:50051
+  #   volumes:
+  #   - ./data/weaviate:/var/lib/weaviate
+  #   restart: on-failure:0
+  #   environment:
+  #     QUERY_DEFAULTS_LIMIT: 25
+  #     AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+  #     PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+  #     DEFAULT_VECTORIZER_MODULE: 'text2vec-ollama'
+  #     ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+  #     CLUSTER_HOSTNAME: 'node1'
+...
