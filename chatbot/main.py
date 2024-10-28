@@ -1,7 +1,6 @@
 import typer
 import json
 import pprint
-import time
 import os
 import arrow
 from pysignalclirestapi import SignalCliRestApi
@@ -51,7 +50,7 @@ def run():
     )
     llm_chain = prompt | llm
     signal = SignalCliRestApi(
-        base_url = 'http://localhost:8080',
+        base_url = 'http://localhost:1337',
         number = config['PHONE_NUMBER']
     )
     client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=5000)
@@ -73,7 +72,7 @@ def run():
 
     try:
         while True:
-            time.sleep(2)
+            asyncio.sleep(2)
 
             dms = signal.receive()
 
@@ -130,5 +129,3 @@ def run():
 
     except KeyboardInterrupt:
         typer.echo('[INFO]: Exiting gracefully')
-    finally:
-        client.close()
