@@ -1,41 +1,28 @@
 import sys
+
 sys.dont_write_bytecode = True
 
 import asyncio
 import uuid
-import json
-from chatbot.helpers import (
-    State,
-    RequestAssistance,
-    AsyncMongoDBSaver
-)
+from os import environ
+
+from dotenv import dotenv_values
+
+#from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchResults
 from langchain_core.messages import (
-    AIMessage,
-    BaseMessage,
-    ChatMessage,
     HumanMessage,
     SystemMessage,
     ToolMessage,
-    AIMessageChunk,
-    RemoveMessage
 )
-from os import environ
-from dotenv import dotenv_values
-from typing import Any, AsyncIterator, Dict, Iterator, Optional, Sequence, Tuple, Annotated, Literal, List, Union
-from typing_extensions import TypedDict
 from langchain_core.runnables import RunnableConfig, RunnableLambda
-from langchain_core.tools import tool
+from langchain_ollama import ChatOllama
+from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langgraph.graph import StateGraph, START, END
 from langgraph.store.base import BaseStore
 from langgraph.store.memory import InMemoryStore
-#from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchResults
-from duckduckgo_search import AsyncDDGS
-from langchain_community.tools import WikipediaQueryRun, BaseTool, Tool
-from langchain_community.utilities import WikipediaAPIWrapper
-from datasets import load_dataset
-from langchain_core.tools import StructuredTool
+
+from chatbot.helpers import AsyncMongoDBSaver, State
+
 # from langchain_core.prompts import ChatPromptTemplate
 # from langchain_core.documents import Document
 # from langchain_core.utils import stringify_dict
@@ -48,7 +35,6 @@ from langchain_core.tools import StructuredTool
 
 
 config = dotenv_values('.env')
-#environ['TAVILY_API_KEY'] = config['TAVILY_API_KEY']
 environ['HUGGINGFACEHUB_API_KEY'] = config['HUGGINGFACEHUB_API_KEY']
 
 
@@ -121,10 +107,10 @@ async def run():
             user_id = config['configurable']['user_id']
             namespace = ('memories', user_id)
             memories = store.search(namespace)
-            #info = "\n".join([d.value["data"] for d in memories])
+            info = "\n".join([d.value["data"] for d in memories])
             last_message = state['messages'][-1]
 
-            if isinstance(last_message, HumanMessage):
+            if isinstance(last_message, HumanMessage) and last_message not in info:
                 memory = last_message.content.strip()
                 store.put(namespace, str(uuid.uuid4()), {'data': memory})
 
@@ -158,15 +144,15 @@ async def run():
 
             On Aida
             - You are helpful, inquisitive, creative, casual, clever, and very friendly.
-            - Occasionally greet or reference the users in your response.
+            - You like being polite and rarely greet or reference users in your responses.
             - You have a photographic memory.
 
             On Responses
             - Preface responses with your name followed by a colon character.
-            - Because you're casual, you can use a wide variety of emoticons.
-            - Paraphrase responses to avoid being repetitive, but keep any relevant information.
-            - Limit emoji usage to a couple times maximum.
-            - Using emoticons is not necessary.
+            - Because you're casual, you can use a wide variety of emoticons!
+            - Paraphrase long responses to avoid being repetitive, but keep any relevant information.
+            - Limit emoticon usage, either using none or up to two.
+            - If asked to draw something, use ASCII art.
             - Avoid using the phrase 'ahah'.
 
             On Tools
@@ -186,11 +172,11 @@ async def run():
 
             inputs['messages'].append(SystemMessage(content=system_prompt))
 
-        inputs['messages'].append(HumanMessage(content="Taylor: Who was Eratosthenes?"))
+        inputs['messages'].append(HumanMessage(content="Andy: Who was Eratosthenes?"))
 
         async for output in app.astream(inputs, config, stream_mode='updates'):
             # stream_mode='updates' yields dictionaries with output keyed by node name
-            for key, value in output.items():
+            for _, value in output.items():
                 value['messages'][-1].pretty_print()
 
 
